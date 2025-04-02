@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lung Cancer Prediction</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('{{ url_for("static", filename="lc.jpg") }}') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            color: white;
+            text-align: center;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            backdrop-filter: blur(5px);
+            padding: 20px;
+        }
+        h1 {
+            font-size: 3rem;
+        }
+        .form-container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            width: 300px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border: none;
+            background-color: rgba(0, 150, 255, 0.7);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+        }
+        button:hover {
+            background-color: rgba(0, 150, 255, 1);
+        }
+        .file-input {
+            background: white;
+            color: black;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .result-container {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            display: inline-block;
+        }
+        img {
+            margin-top: 15px;
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lung Cancer Prediction</h1>
+        <div class="form-container">
+            <form id="prediction-form" method="POST" action="/predict" enctype="multipart/form-data">
+                <label for="file">Upload CT Scan Image:</label>
+                <input type="file" name="file" id="file" class="file-input" accept="image/*" required>
+                <button type="submit">Predict</button>
+            </form>
+        </div>
+
+        <div class="result-container" id="result-container" style="display: none;">
+            <h3>Prediction:</h3>
+            <p id="prediction"></p>
+            <p>Confidence: <span id="confidence"></span>%</p>
+            <img id="uploaded-image" src="" alt="Uploaded CT Scan">
+        </div>
+    </div>
+
+    <script>
+        // Handle form submission and display prediction result
+        document.getElementById('prediction-form').onsubmit = async function (event) {
+            event.preventDefault();
+            let formData = new FormData();
+            formData.append("file", document.getElementById('file').files[0]);
+
+            // Send the file to Flask backend
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('result-container').style.display = 'block';
+                    document.getElementById('prediction').textContent = result.prediction;
+                    document.getElementById('confidence').textContent = (result.confidence * 100).toFixed(2);
+                    document.getElementById('uploaded-image').src = result.file_path; // Set the uploaded image path
+                } else {
+                    alert(result.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        };
+    </script>
+</body>
+</html>
